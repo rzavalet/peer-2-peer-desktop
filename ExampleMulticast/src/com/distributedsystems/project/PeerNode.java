@@ -262,6 +262,39 @@ public class PeerNode {
 		}
 	}
 	
+	public void keepAlive() {
+		while (shutdown == false) {
+			List<String> deleteList = new 
+			
+		}
+        while not self.shutdown:
+            delete_list = []
+            if self.debug:
+                print 'Running garbage collector...'
+            for peer_id in self.peer_list:
+                is_connected = False
+                try:
+                    remote_host, remote_port = self.peer_list[peer_id]
+                    peer_connection = PeerConnection( self.my_id, 
+                                          remote_host, 
+                                          remote_port)
+                    #Send dummy message
+                    peer_connection.sendData('HELL', '')
+                    is_connected = True
+                except:
+                    delete_list.append( peer_id )
+
+                if is_connected:
+                    peer_connection.close()
+
+            for peer_id in delete_list:
+                if peer_id in self.peer_list:
+                    del self.peer_list[peer_id]
+
+            time.sleep( delay )
+	}
+	
+	
 	public void connectionHandler() {
 		Debug.print("...Starting connection Handler", debug);
 		//Set the socket
