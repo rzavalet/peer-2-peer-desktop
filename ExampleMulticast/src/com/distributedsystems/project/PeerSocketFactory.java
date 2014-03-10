@@ -1,6 +1,8 @@
 package com.distributedsystems.project;
 
+import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 
 
 public class PeerSocketFactory {
@@ -17,12 +19,12 @@ public class PeerSocketFactory {
 		return instance;
 	}
 	
-	public SocketInterface makeSocket(String host, int port) {
+	public SocketInterface makeSocket(String host, int port) throws IOException {
 		SocketInterface mySocket = new PeerSocket(host, port);
 		return mySocket;
 	}
 
-	public SocketInterface makeSocket(Socket socket) {
+	public SocketInterface makeSocket(Socket socket) throws SocketException {
 		SocketInterface mySocket = new PeerSocket(socket);
 		return mySocket;
 	}

@@ -16,34 +16,23 @@ public class PeerSocket implements SocketInterface{
 	private Socket socket;
 	private boolean debug = false;
 	
-	public PeerSocket(Socket socket) {
+	public PeerSocket(Socket socket) throws SocketException{
 		this.socket = socket;
-		try {
-			socket.setTcpNoDelay(true);
-			socket.setPerformancePreferences(1, 0, 0);
-			socket.setReceiveBufferSize(256);
-			socket.setSendBufferSize(256);
-		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		socket.setTcpNoDelay(true);
+		socket.setPerformancePreferences(1, 0, 0);
+		socket.setReceiveBufferSize(256);
+		socket.setSendBufferSize(256);
 	}
 	
-	public PeerSocket(String host, int port) {
+	public PeerSocket(String host, int port) throws IOException{
 		InetAddress address;
-		try {
-			address = InetAddress.getByName(host);
+		address = InetAddress.getByName(host);
 
-			socket = new Socket(address, port);
-			socket.setTcpNoDelay(true);
-			socket.setPerformancePreferences(1, 0, 0);
-			socket.setReceiveBufferSize(256);
-			socket.setSendBufferSize(256);
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		socket = new Socket(address, port);
+		socket.setTcpNoDelay(true);
+		socket.setPerformancePreferences(1, 0, 0);
+		socket.setReceiveBufferSize(256);
+		socket.setSendBufferSize(256);
 	}
 
 	/*
@@ -64,65 +53,43 @@ public class PeerSocket implements SocketInterface{
 	}*/
 
 	@Override
-	public int read(byte[] data) {
+	public int read(byte[] data) throws IOException{
 		InputStream in = null;
 		int size = -1;
 		
-		try {
-			in = socket.getInputStream();
-			size = in.read(data);
-			Debug.print("...Received bytes: " + new String(data), debug);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		in = socket.getInputStream();
+		size = in.read(data);
+		Debug.print("...Received bytes: " + new String(data), debug);
 
         return size;
 	}
 	
-	public String read() {
+	public String read() throws IOException{
 	
-		try {
-			BufferedReader inFromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			String data = inFromServer.readLine();
-			Debug.print("...Received bytes: " + data, debug);
-			return data;
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-        return null;
+		String data = null;		
+		BufferedReader inFromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		data = inFromServer.readLine();
+		Debug.print("...Received bytes: " + data, debug);
+		return data;
 	}
 	
 	@Override
-	public void write(byte[] data) {
-		
+	public void write(byte[] data) throws IOException{		
 		OutputStream out = null;
 		
-		try {
-			out = socket.getOutputStream();
-			//Debug.print("...Sending bytes: " + new String(data), debug);
-			out.write(data);
-			out.flush();
-			//out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		out = socket.getOutputStream();
+		//Debug.print("...Sending bytes: " + new String(data), debug);
+		out.write(data);
+		out.flush();
+		//out.close();
 	}
 
-	public void write(String data) {
-
-		try {
-			PrintWriter outToServer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
-			Debug.print("...Sending bytes: " + new String(data), debug);
-			outToServer.print(data + "\n");
-			outToServer.flush();
-			//out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public void write(String data) throws IOException {
+		PrintWriter outToServer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+		Debug.print("...Sending bytes: " + new String(data), debug);
+		outToServer.print(data + "\n");
+		outToServer.flush();
+		//out.close();
 	}
 	
 	@Override

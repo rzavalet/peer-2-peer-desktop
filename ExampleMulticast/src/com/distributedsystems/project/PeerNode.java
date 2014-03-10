@@ -25,6 +25,7 @@ public class PeerNode {
 	public static final String MOVE_LEFT = "MOVL";
 	public static final String MOVE_UP = "MOVU";
 	public static final String MOVE_DOWN = "MOVD";
+	public static final String HELLO = "HELL";
 	
 	private PeerInformation myPeerInformation;
 	private HashMap<String, PeerInformation> fingerTable;
@@ -197,23 +198,28 @@ public class PeerNode {
 		PeerMessage reply = null;
 		List<PeerMessage> messages = new ArrayList<PeerMessage>();
 		
-		Debug.print("...Sending message to: " + remoteHost.getHost() + ":" + remoteHost.getPort(), debug);
-		
-		PeerConnection connection = new PeerConnection(remoteHost);
+		Debug.print("...Sending message to: " + remoteHost.getHost() + ":" + remoteHost.getPort(), debug);		
 		PeerMessage message = new PeerMessage(messageType, messageData);
-		connection.sendData(message);
 		
-		if (waitReply == true) {
-			Debug.print("...Receiving message from: " + remoteHost.getHost() + ":" + remoteHost.getPort(), debug);
-			reply = connection.receiveData();
-			while (reply != null) {
-				messages.add(reply);
-				reply = connection.receiveData();
-			}
+		try {
+			PeerConnection connection = new PeerConnection(remoteHost);
+			connection.sendData(message);
 
+			if (waitReply == true) {
+				Debug.print("...Receiving message from: " + remoteHost.getHost() + ":" + remoteHost.getPort(), debug);
+				reply = connection.receiveData();
+				while (reply != null) {
+					messages.add(reply);
+					reply = connection.receiveData();
+				}
+
+			}
+			connection.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
-		connection.close();
+				
 		return messages;
 	}
 	
@@ -264,34 +270,34 @@ public class PeerNode {
 	
 	public void keepAlive() {
 		while (shutdown == false) {
-			List<String> deleteList = new 
+			List<String> deleteList = new ArrayList<String>();
+			for(String remotePeerId : getPeerKeys()) {
+				PeerInformation remotePeer = getPeer(remotePeerId);
+				PeerMessage message = new PeerMessage(HELLO, "");
+
+				try{
+					PeerConnection connection = new PeerConnection(remotePeer);
+					connection.sendData(message);
+					connection.close();
+				}
+				catch (IOException e){
+					deleteList.add(remotePeerId);
+				}
+				
+			}
 			
+			for (String peerId : deleteList) {
+				if (fingerTable.containsKey(peerId)) {
+					fingerTable.remove(peerId);
+				}
+			}
+			
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-        while not self.shutdown:
-            delete_list = []
-            if self.debug:
-                print 'Running garbage collector...'
-            for peer_id in self.peer_list:
-                is_connected = False
-                try:
-                    remote_host, remote_port = self.peer_list[peer_id]
-                    peer_connection = PeerConnection( self.my_id, 
-                                          remote_host, 
-                                          remote_port)
-                    #Send dummy message
-                    peer_connection.sendData('HELL', '')
-                    is_connected = True
-                except:
-                    delete_list.append( peer_id )
-
-                if is_connected:
-                    peer_connection.close()
-
-            for peer_id in delete_list:
-                if peer_id in self.peer_list:
-                    del self.peer_list[peer_id]
-
-            time.sleep( delay )
 	}
 	
 	
@@ -322,19 +328,22 @@ public class PeerNode {
 
 						@Override
 						public void run() {
-							PeerConnection peerConnection = new PeerConnection(myPeerInformation, clientSocket);
-							PeerMessage message = peerConnection.receiveData();
-							Debug.print("Processing: " + message.getMessageType(), debug);
-							HandlerInterface handler = handlers.get(message.getMessageType());
-							if (handler != null){
-								handler.handleMessage(peerConnection, message);
+							PeerMessage message;
+							try {
+								PeerConnection peerConnection = new PeerConnection(myPeerInformation, clientSocket);
+								message = peerConnection.receiveData();
+								Debug.print("Processing: " + message.getMessageType(), debug);
+								HandlerInterface handler = handlers.get(message.getMessageType());
+								if (handler != null){
+									handler.handleMessage(peerConnection, message);
+								}
+								peerConnection.close();
+							} catch (IOException e) {
+								e.printStackTrace();
 							}
-							peerConnection.close();
-						}
-						
+						}						
 					}.start();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					//e.printStackTrace();
 					//Debug.print("...Waiting connection", debug);
 				}

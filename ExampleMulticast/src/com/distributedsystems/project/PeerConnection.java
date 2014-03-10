@@ -1,15 +1,17 @@
 package com.distributedsystems.project;
 
+import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Arrays;
 
 public class PeerConnection {
 
 	private PeerInformation peerInformation;
 	private SocketInterface socket;
-	private final boolean debug = true;
+	private final boolean debug = false;
 	
-	public PeerConnection(PeerInformation peerInformation) {
+	public PeerConnection(PeerInformation peerInformation) throws IOException {
 		//Set the peer information
 		this.peerInformation = peerInformation;
 		
@@ -18,7 +20,7 @@ public class PeerConnection {
 		this.socket = socketFactory.makeSocket(this.peerInformation.getHost(), this.peerInformation.getPort());
 	}
 
-	public PeerConnection(PeerInformation peerInformation, Socket socket) {
+	public PeerConnection(PeerInformation peerInformation, Socket socket) throws SocketException {
 		this.peerInformation = peerInformation;
 		
 		//Set the socket
@@ -29,7 +31,7 @@ public class PeerConnection {
 		return peerInformation;
 	}
 	
-	public PeerMessage receiveData() {
+	public PeerMessage receiveData() throws IOException {
 		byte[] marshalledMessage = new byte[256];
 		PeerMessage message = null;
 		int numBytesRead;
@@ -81,7 +83,7 @@ public class PeerConnection {
 	}
 	*/
 	
-	public void sendData(PeerMessage message) {
+	public void sendData(PeerMessage message) throws IOException {
 		byte[] marshalledMessage = new byte[256];
 		byte[] originalMessage;
 		

@@ -32,7 +32,12 @@ public class PeerClient {
 			Debug.print("... Replying with peer name: " + myId, debug);
 			
 			messageName = new PeerMessage(PeerNode.REPLY, myId);
-			connection.sendData(messageName);
+			try {
+				connection.sendData(messageName);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 	}
@@ -50,16 +55,21 @@ public class PeerClient {
 			Debug.print("Listing peers", debug);
 			
 			messageList = new PeerMessage(PeerNode.REPLY, String.valueOf(peer.getNumberOfPeers()));
-			connection.sendData(messageList);
-			
-			for (String currentPeerId : peer.getPeerKeys()) {
-				PeerInformation currentPeerInformation= peer.getPeer(currentPeerId);
-				messageList = new PeerMessage(PeerNode.REPLY, 
-						currentPeerInformation.getPeerId() + " " + currentPeerInformation.getHost() + 
-						" " + currentPeerInformation.getPort());
+			try {
 				connection.sendData(messageList);
-			}
+				for (String currentPeerId : peer.getPeerKeys()) {
+					PeerInformation currentPeerInformation= peer.getPeer(currentPeerId);
+					messageList = new PeerMessage(PeerNode.REPLY, 
+							currentPeerInformation.getPeerId() + " " + currentPeerInformation.getHost() + 
+							" " + currentPeerInformation.getPort());
+					connection.sendData(messageList);
+				}
 
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 	}
 	
@@ -84,7 +94,12 @@ public class PeerClient {
 			}
 						
 			PeerMessage replyMessage = new PeerMessage(PeerNode.REPLY, "Peer added: " + peerId);
-			connection.sendData(replyMessage);
+			try {
+				connection.sendData(replyMessage);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
 		}
 		
@@ -324,18 +339,20 @@ public class PeerClient {
 		
 		Debug.print("*** STARTING PEER ****", debug);
 		
-		if (args.length != 1 && args.length != 3) {
+		if (args.length != 2 && args.length != 4) {
 			Debug.print("ERROR: invalid number of parameters: Args Count: " + args.length, debug);
 			return;
 		}
 	
 		myId = args[0];
+		port = Integer.parseInt(args[1]);
+		
 		Debug.print("I am: "+ myId, debug);
 		
 		
-		if (args.length == 3) {
-			trackerIp = args[1];
-			trackerPort = Integer.parseInt(args[2]);
+		if (args.length == 4) {
+			trackerIp = args[2];
+			trackerPort = Integer.parseInt(args[3]);
 			
 			Debug.print("Tracker: (" + trackerIp + ", " + trackerPort + ")", debug);
 			tracker = new PeerInformation(null, trackerIp, trackerPort);			
@@ -346,6 +363,15 @@ public class PeerClient {
 		
 		final PeerClient myClient = new PeerClient(myId, port, tracker);
 		
+		new Thread("ConnectionHandler") {
+
+			@Override
+			public void run() {
+				myClient.peerNode.keepAlive();
+			}
+			
+		}.start();
+
 		new Thread("ConnectionHandler") {
 
 			@Override
