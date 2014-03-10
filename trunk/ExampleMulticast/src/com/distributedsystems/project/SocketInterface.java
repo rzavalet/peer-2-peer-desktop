@@ -1,12 +1,14 @@
 package com.distributedsystems.project;
 
+import java.io.IOException;
+
 public interface SocketInterface {
 
 	//public int read();
-	public String read();
-	public int read(byte[] data);
-	public void write(String data);
-	public void write(byte[] data);
+	public String read() throws IOException;
+	public int read(byte[] data) throws IOException;
+	public void write(String data) throws IOException;
+	public void write(byte[] data) throws IOException;
 	public void close();
 	
 }
