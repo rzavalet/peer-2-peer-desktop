@@ -340,6 +340,8 @@ public class PeerClient {
 		
 		/*br = new BufferedReader(new InputStreamReader(System.in));*/
 	
+		snakeView = new SnakeView();
+		
 		br = new BufferedReader(new InputStreamReader(System.in));
 	}
 	
@@ -520,7 +522,7 @@ public class PeerClient {
 		}
 		
 		final PeerClient myClient = new PeerClient(myId, port, tracker);
-		
+		/*
 		new Thread("ConnectionHandler") {
 
 			@Override
@@ -529,7 +531,7 @@ public class PeerClient {
 			}
 			
 		}.start();
-
+*/
 		new Thread("ConnectionHandler") {
 
 			@Override
