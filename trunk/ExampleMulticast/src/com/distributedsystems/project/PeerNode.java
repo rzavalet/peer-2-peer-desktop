@@ -26,10 +26,18 @@ public class PeerNode {
 	public static final String MOVE_UP = "MOVU";
 	public static final String MOVE_DOWN = "MOVD";
 	public static final String HELLO = "HELL";
-	
+	public static final String GET_LEADER = "LEAD";
+	public static final String GET_SNAKE = "SNAK";
+	public static final String GET_APPLES = "APPL";
+	public static final String GET_CONFIG = "CONF";
+	public static final String BLOCK = "BLOC";
+	public static final String UNBLOCK = "UNBL";
+	public static final String NEW_LEADER = "NEWL";
+
 	private PeerInformation myPeerInformation;
 	private HashMap<String, PeerInformation> fingerTable;
 	private HashMap<String, HandlerInterface> handlers;
+	private String leaderId = null;
 	
 	private boolean shutdown = false;
 	private static final boolean debug = true;
@@ -350,6 +358,14 @@ public class PeerNode {
 				
 			}
 
+	}
+
+	public String getLeaderId() {
+		return leaderId;
+	}
+
+	public void setLeaderId(String leaderId) {
+		this.leaderId = leaderId;
 	}
 	
 	
