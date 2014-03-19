@@ -7,7 +7,6 @@ public class PeerInformation {
 	
 	
 	public PeerInformation(String peerId, String host, int port) {
-		super();
 		this.peerId = peerId;
 		this.host = host;
 		this.port = port;

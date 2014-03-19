@@ -4,14 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import com.distributedsystems.project.HandlerInterface;
-import com.distributedsystems.project.PeerConnection;
-import com.distributedsystems.project.PeerMessage;
-import com.distributedsystems.project.PeerNode;
-import com.distributedsystems.project.PeerClient;
-import com.distributedsystems.project.Debug;
-import com.distributedsystems.project.Coordinate;
-
 public class PeerClient {
 
 	private PeerNode peerNode;
@@ -274,6 +266,13 @@ public class PeerClient {
 		@Override
 		public void handleMessage(PeerConnection connection, PeerMessage message) {
 			System.out.println("*** BLOCKING GAME");
+			PeerMessage replyMessage = new PeerMessage(PeerNode.REPLY, "Peer Blocked");
+			try {
+				connection.sendData(replyMessage);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -281,12 +280,20 @@ public class PeerClient {
 		@Override
 		public void handleMessage(PeerConnection connection, PeerMessage message) {
 			System.out.println("*** UNBLOCKING GAME");
+			PeerMessage replyMessage = new PeerMessage(PeerNode.REPLY, "Peer Unblocked");
+			try {
+				connection.sendData(replyMessage);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
 
 	public PeerClient(String id, int port, PeerInformation trackerPeerInformation) {
 		peerNode = new PeerNode(id, port, trackerPeerInformation);
+		snakeView = new SnakeView();
 		
 		//Add handlers
 		HandlerInterface peerName = new PeerName(peerNode.getPeerId());
@@ -339,8 +346,6 @@ public class PeerClient {
 		peerNode.addHandler(PeerNode.NEW_LEADER, newLeader);	
 		
 		/*br = new BufferedReader(new InputStreamReader(System.in));*/
-	
-		snakeView = new SnakeView();
 		
 		br = new BufferedReader(new InputStreamReader(System.in));
 	}
@@ -414,6 +419,48 @@ public class PeerClient {
 		peerNode.broadcastMessage(PeerNode.START_GAME, "");
 	}
 
+    private void initNewGame() {
+
+		
+        snakeView.getmSnakeTrail().clear();
+        snakeView.getmAppleList().clear();
+        
+        if (peerNode.getNumberOfPeers() > 0) {
+            /*
+             * At this point we should already know some peers.
+             * Steps to coordinate the game on startup is as follows:
+             * 
+             * 1) Ask the tracker who the leader is now
+             * 2) Block the leader and ask for the current layout
+             * 3) Unblock the leader
+             */
+        	Debug.print("Obtaining game from peer", debug);
+        	String myLeader = peerNode.askForLeader();
+        	if (myLeader != null && myLeader.equals(peerNode.getPeerId()) == false) {
+	        	Layout myLayout = peerNode.askForLayout(myLeader);
+	        	for (Coordinate coordinate : myLayout.snake) {
+	        		snakeView.getmSnakeTrail().add(coordinate);
+	        	}
+	        	for (Coordinate coordinate : myLayout.apples) {
+	        		snakeView.getmAppleList().add(coordinate);
+	        	}
+
+	        	snakeView.setmNextDirection(myLayout.mNextDirection);
+	        	snakeView.setmMoveDelay(myLayout.mMoveDelay);
+	        	snakeView.setmScore(myLayout.mScore);
+        	}
+        }
+        else {
+	        // For now we're just going to load up a short default eastbound snake
+	        // that's just turned north
+        	Debug.print("Creating new game", debug);
+	        snakeView.initSnakeView();
+        }
+        
+        snakeView.printGame();
+        startGame();
+    }
+    
 	public void console() {
 		String[] commands = null;
 		
@@ -439,6 +486,21 @@ public class PeerClient {
 				continue;
 			}
 			
+			if (commands[0].equals("MY_LEADER")) {
+				System.out.println("My Leader is: " + peerNode.getLeaderId());
+				continue;
+			}
+			
+			if (commands[0].equals("MY_GAME")) {
+				if (snakeView == null) {
+					System.out.println("Game has not started");
+				}
+				else {
+					snakeView.printGame();
+				}
+				continue;
+			}
+			
 			if (commands[0].equals("HELP")) {
 				printHelp();
 				continue;
@@ -461,6 +523,11 @@ public class PeerClient {
 				moveDown();
 				continue;
 			}
+			if (commands[0].equals("NEW_GAME")) {
+				initNewGame();
+				continue;
+			}
+			
 			if (validateCommand(commands) == false) {
 				System.out.println("Invalid command");
 				continue;
@@ -488,6 +555,17 @@ public class PeerClient {
 		System.out.print("Type a command: ");
 	}
 	
+	
+	/**
+	 * This is the main routine. 
+	 * @param args
+	 * args[0] = myId
+	 * args[1] = myPort
+	 * 
+	 * Args[2] and args[3] are optional
+	 * args[2] = Tracker IP
+	 * args[3] = Tracker PORT
+	 */
 	public static void main(String[] args) {
 		int port = 8080;
 		String myId = null;
@@ -531,7 +609,7 @@ public class PeerClient {
 			}
 			
 		}.start();
-*/
+		 */
 		new Thread("ConnectionHandler") {
 
 			@Override
