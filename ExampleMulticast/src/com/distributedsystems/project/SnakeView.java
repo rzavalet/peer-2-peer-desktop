@@ -3,11 +3,14 @@ package com.distributedsystems.project;
 import java.util.ArrayList;
 import java.util.Random;
 
+/**
+ * This public class simulates the SnakeView in the Snake game. It contains hardcoded 
+ * values for the snake coordinates as well as for the apples and other 
+ * game properties
+ */
+
 public class SnakeView {
     private static final int NORTH = 1;
-    private static final int SOUTH = 2;
-    private static final int EAST = 3;
-    private static final int WEST = 4;
 
     private static final Random RNG = new Random();
 
@@ -33,13 +36,23 @@ public class SnakeView {
 		return mMoveDelay;
 	}
 	
-    private void addRandomApple() {
+	
+    public void setmNextDirection(int mNextDirection) {
+		this.mNextDirection = mNextDirection;
+	}
+	public void setmScore(long mScore) {
+		this.mScore = mScore;
+	}
+	public void setmMoveDelay(long mMoveDelay) {
+		this.mMoveDelay = mMoveDelay;
+	}
+	private void addRandomApple() {
         Coordinate newCoord = null;
         boolean found = false;
         while (!found) {
             // Choose a new location for our apple
-            int newX = 1 + RNG.nextInt(50 - 2);
-            int newY = 1 + RNG.nextInt(50 - 2);
+            int newX = 1 + RNG.nextInt(10 - 2);
+            int newY = 1 + RNG.nextInt(10 - 2);
             newCoord = new Coordinate(newX, newY);
 
             // Make sure it's not already under the snake
@@ -61,7 +74,12 @@ public class SnakeView {
         mAppleList.add(newCoord);
     }
     
-	public SnakeView() {
+    
+    /** 
+     * During creation, we pass in hardcoded coordinates
+     * to facilitate the debugging of the application.
+     */
+	public void initSnakeView() {
         mSnakeTrail.add(new Coordinate(7, 7));
         mSnakeTrail.add(new Coordinate(6, 7));
         mSnakeTrail.add(new Coordinate(5, 7));
@@ -76,7 +94,22 @@ public class SnakeView {
 
         mMoveDelay = 600;
         mScore = 0;
-
+	}
+	
+	public void printGame() {
+		System.out.println("Printing Snake");
+		for (Coordinate currentCoord : mSnakeTrail) {
+			System.out.println(currentCoord);
+		}
+		
+		System.out.println("Printing Apples");
+		for (Coordinate currentCoord : mAppleList) {
+			System.out.println(currentCoord);
+		}
+		
+		System.out.println("Direction: " + mNextDirection);
+		System.out.println("Delay: " + mMoveDelay);
+		System.out.println("Score: " + mScore);
 	}
 	
 }

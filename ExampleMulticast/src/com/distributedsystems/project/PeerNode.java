@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 public class PeerNode {
@@ -88,6 +89,13 @@ public class PeerNode {
 		this.fingerTable = new HashMap<String, PeerInformation>();
 		buildFingerTable(trackerPeerInformation, 5);
 		
+		//At the beginning we assume our tracker is the leader
+		if (trackerPeerInformation != null){
+			this.leaderId = trackerPeerInformation.getPeerId();
+		}
+		else {
+			this.leaderId = id;
+		}
 	}
 	
 	private void buildFingerTable(PeerInformation trackerPeerInformation, int ttl){
@@ -368,5 +376,176 @@ public class PeerNode {
 		this.leaderId = leaderId;
 	}
 	
+	public Layout askForLayout(String leaderPeerId) {
+		Layout layout = new Layout();
+		
+		List<PeerMessage> messages = null;
+		PeerMessage message = null;
+		PeerInformation leaderPeer = getPeer(leaderPeerId);
+		
+		if (leaderPeer == null){
+			return null;
+		}
+		
+		messages = null;
+		//Block the leader
+		messages = connectAndSend(leaderPeer, BLOCK, "", true);
+		if (messages == null) {
+			return null;
+		}
+		
+		if (messages.size() <= 0) {
+			return null;
+		}
+		
+		message = messages.get(0);
+		if (!message.getMessageType().equals(REPLY)) {
+			return null;
+		}
+		
+		Debug.print(message.getMessageData(), debug);
+		
+		//Obtain the snake coordinates
+		messages = connectAndSend(leaderPeer, GET_SNAKE, "", true);
+		if (messages == null) {
+			return null;
+		}
+		
+		if (messages.size() <= 1) {
+			return null;
+		}
+		
+		message = messages.remove(0);
+		
+		Debug.print("Receiving Snake coordinates", debug);
+		for (PeerMessage currentMessage : messages) {
+			String[] fields = currentMessage.getMessageData().split(" ");
+			Coordinate coordinate = new Coordinate(Integer.parseInt(fields[0]), Integer.parseInt(fields[1]));
+			Debug.print("Received coordinate: " + coordinate, debug);
+			layout.snake.add(coordinate);
+		}
+		
+		//Now obtain the apples coordinates
+		messages = null;
+		messages = connectAndSend(leaderPeer, GET_APPLES, "", true);
+		if (messages == null) {
+			return null;
+		}
+		
+		if (messages.size() <= 1) {
+			return null;
+		}
+		
+		message = messages.remove(0);
+		
+		Debug.print("Receiving Apples coordinates", debug);
+		for (PeerMessage currentMessage : messages) {
+			String[] fields = currentMessage.getMessageData().split(" ");
+			Coordinate coordinate = new Coordinate(Integer.parseInt(fields[0]), Integer.parseInt(fields[1]));
+			Debug.print("Received coordinate: " + coordinate, debug);
+			layout.apples.add(coordinate);
+		}
+		
+		Debug.print("Receiving Configuration", debug);
+		//Now obtain the apples coordinates
+		messages = null;
+		messages = connectAndSend(leaderPeer, GET_CONFIG, "", true);
+		if (messages == null) {
+			return null;
+		}
+		
+		if (messages.size() <= 0) {
+			return null;
+		}
+		
+		message = messages.get(0);
+		if (!message.getMessageType().equals(REPLY)) {
+			return null;
+		}
+		
+		
+		String[] fields = message.getMessageData().split(" ");
+		if (fields.length < 3) {
+			return null;
+		}
+		
+		layout.mMoveDelay = Integer.parseInt(fields[0]);
+		layout.mNextDirection = Integer.parseInt(fields[1]);
+		layout.mScore = Integer.parseInt(fields[2]);
+		
+		messages = connectAndSend(leaderPeer, UNBLOCK, "", true);
+		if (messages == null) {
+			return null;
+		}
+		
+		if (messages.size() <= 0) {
+			return null;
+		}
+		
+		message = messages.get(0);
+		if (!message.getMessageType().equals(REPLY)) {
+			return null;
+		}
+		Debug.print(message.getMessageData(), debug);
+		
+		Debug.print("*** FINISHED GETTING LAYOUT ***", debug);
+		return layout;
+	}
+	
+	public String askForLeader() {
+		List<PeerMessage> messages = null;
+		PeerMessage message = null;
+		PeerInformation randomPeer = null;
+		
+		if (getNumberOfPeers() == 0){
+			return null;
+		}
+		
+		//First obtain the peer's name
+		//Debug.print("...Obtaining tracker information", debug);
+		messages = null;
+
+		//Get a random peer
+		int size = getPeerKeys().size();
+		int item = new Random().nextInt(size);
+		int i = 0;
+		for(String peerId: getPeerKeys())
+		{
+		    if (i == item){
+		    	randomPeer = getPeer(peerId);
+		    	break;
+		    }
+		    i = i + 1;
+		}
+		
+		messages = connectAndSend(randomPeer, GET_LEADER, "", true);
+		if (messages == null) {
+			return null;
+		}
+		
+		if (messages.size() <= 0) {
+			return null;
+		}
+		
+		message = messages.get(0);
+		if (!message.getMessageType().equals(REPLY)) {
+			return null;
+		}
+		
+		String leaderPeerId = message.getMessageData();
+		if (fingerTable.containsKey(leaderPeerId) == true) {
+			Debug.print("...Leader is " + leaderPeerId, debug);
+			return leaderPeerId;
+		}
+		else if (leaderPeerId.equals(myPeerInformation.getPeerId())) {
+			Debug.print("... I am the leader myself", debug);
+			return leaderPeerId;
+		}
+		else {
+			
+			Debug.print("I do not know this peer: " + leaderPeerId, debug);
+			return null;
+		}
+	}
 	
 }
