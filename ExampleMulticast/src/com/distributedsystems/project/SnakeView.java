@@ -13,12 +13,15 @@ public class SnakeView {
     private static final int NORTH = 1;
 
     private static final Random RNG = new Random();
-
+    private static final boolean debug = true;
+    
     private ArrayList<Coordinate> mSnakeTrail = new ArrayList<Coordinate>();
     private ArrayList<Coordinate> mAppleList = new ArrayList<Coordinate>();
     private int mNextDirection = NORTH;
     private long mScore = 0;
     private long mMoveDelay = 600;
+    private int width = 600;
+    private int height = 900;
     
 	public ArrayList<Coordinate> getmSnakeTrail() {
 		return mSnakeTrail;
@@ -36,8 +39,13 @@ public class SnakeView {
 		return mMoveDelay;
 	}
 	
-	
-    public void setmNextDirection(int mNextDirection) {
+    public int getWidth() {
+		return width;
+	}
+	public int getHeight() {
+		return height;
+	}
+	public void setmNextDirection(int mNextDirection) {
 		this.mNextDirection = mNextDirection;
 	}
 	public void setmScore(long mScore) {
@@ -96,6 +104,19 @@ public class SnakeView {
         mScore = 0;
 	}
 	
+	public void resetView(int width, int height) {
+    	
+    	if (this.width > width) {
+    		this.width = width;
+    	}
+    	if (this.height > height) {
+    		this.height = height;
+    	}
+    	
+    	Debug.print("New Width: " + this.width, debug);
+    	Debug.print("New Height: " + this.height, debug);
+    }
+	
 	public void printGame() {
 		System.out.println("Printing Snake");
 		for (Coordinate currentCoord : mSnakeTrail) {
@@ -110,6 +131,9 @@ public class SnakeView {
 		System.out.println("Direction: " + mNextDirection);
 		System.out.println("Delay: " + mMoveDelay);
 		System.out.println("Score: " + mScore);
+		
+		System.out.println("Widht: " + width);
+		System.out.println("Height: " + height);
 	}
 	
 }

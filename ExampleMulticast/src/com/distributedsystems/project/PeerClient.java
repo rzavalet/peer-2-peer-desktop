@@ -250,7 +250,11 @@ public class PeerClient {
 			PeerMessage messageList = null;
 			Debug.print("Sending configuration", debug);
 			
-			messageList = new PeerMessage(PeerNode.REPLY, snake.getmMoveDelay() + " " + snake.getmNextDirection() + " " + snake.getmScore());
+			String[] size = message.getMessageData().split(" ");
+			snake.resetView(Integer.parseInt(size[0]), Integer.parseInt(size[1]));
+			
+			messageList = new PeerMessage(PeerNode.REPLY, snake.getmMoveDelay() + " " + snake.getmNextDirection() + " " + snake.getmScore()
+					+ " " + snake.getWidth() + " " + snake.getHeight());
 			
 			try {
 				connection.sendData(messageList);		
@@ -437,7 +441,7 @@ public class PeerClient {
         	Debug.print("Obtaining game from peer", debug);
         	String myLeader = peerNode.askForLeader();
         	if (myLeader != null && myLeader.equals(peerNode.getPeerId()) == false) {
-	        	Layout myLayout = peerNode.askForLayout(myLeader);
+	        	Layout myLayout = peerNode.askForLayout(myLeader, snakeView.getWidth(), snakeView.getHeight());
 	        	for (Coordinate coordinate : myLayout.snake) {
 	        		snakeView.getmSnakeTrail().add(coordinate);
 	        	}

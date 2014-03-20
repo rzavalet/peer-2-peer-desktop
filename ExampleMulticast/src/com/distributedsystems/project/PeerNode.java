@@ -376,7 +376,7 @@ public class PeerNode {
 		this.leaderId = leaderId;
 	}
 	
-	public Layout askForLayout(String leaderPeerId) {
+	public Layout askForLayout(String leaderPeerId, int width, int height) {
 		Layout layout = new Layout();
 		
 		List<PeerMessage> messages = null;
@@ -449,7 +449,7 @@ public class PeerNode {
 		Debug.print("Receiving Configuration", debug);
 		//Now obtain the apples coordinates
 		messages = null;
-		messages = connectAndSend(leaderPeer, GET_CONFIG, "", true);
+		messages = connectAndSend(leaderPeer, GET_CONFIG, width + " " + height, true);
 		if (messages == null) {
 			return null;
 		}
@@ -472,6 +472,8 @@ public class PeerNode {
 		layout.mMoveDelay = Integer.parseInt(fields[0]);
 		layout.mNextDirection = Integer.parseInt(fields[1]);
 		layout.mScore = Integer.parseInt(fields[2]);
+		layout.width = Integer.parseInt(fields[3]);
+		layout.height = Integer.parseInt(fields[4]);
 		
 		messages = connectAndSend(leaderPeer, UNBLOCK, "", true);
 		if (messages == null) {
